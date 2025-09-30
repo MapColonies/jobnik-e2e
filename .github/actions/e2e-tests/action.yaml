@@ -49,6 +49,9 @@ runs:
         ref: ${{ inputs.manager_version || steps.get_manager_version.outputs.version }}
         path: jobnik-manager
     
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v1
+    
     # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality.
     - name: Build and Deploy the Services
       run: docker-compose up --build -d --wait
