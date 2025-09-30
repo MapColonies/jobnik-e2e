@@ -62,6 +62,12 @@ runs:
       with:
         node-version: '22.x'
         cache: 'npm'
+
+    # Step 7: Install dependencies for jobnik-sdk and pack it
+    - name: Install jobnik-sdk dependencies
+      shell: bash
+      working-directory: ./jobnik-sdk
+      run: npm ci
     
     # Step 6: Install dependencies and run the tests.
     # Using 'run' with shell is the standard way to execute npm commands.
@@ -74,5 +80,6 @@ runs:
         PACKED_FILE_NAME = $(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
         echo "packed file name = $PACKED_FILE_NAME"
         npm install "./$PACKED_FILE_NAME"
+        echo "installed the package"
         npm ci
         npm test
