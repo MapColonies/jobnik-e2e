@@ -20,7 +20,7 @@ jobs:
 
       # Step 2: Run the composite action
       - name: Run E2E Integration Test Action
-        uses: ./.github/actions/run-e2e-tests # This path points to the action you just created
+        uses: ./.github/actions/e2e-tests # This path points to the action you just created
         with:
           manager_version: ${{ inputs.manager_version }}
           sdk_version: ${{ inputs.sdk_version }}

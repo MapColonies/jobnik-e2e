@@ -1,4 +1,4 @@
-name: 'Run E2E Integration Tests'
+name: 'Run E2E Tests'
 
 description: 'Sets up a test environment with a specific manager and SDK version, then runs Vitest'
 
