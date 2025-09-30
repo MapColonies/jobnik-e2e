@@ -15,7 +15,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # Step 1: Get the latest manager version using a dedicated action if no input is provided.
+    # Step 1: Get the latest manager version using a dedicated action if no input is provided
     - name: Get latest manager version
       if: inputs.manager_version == ''
       id: get_manager_version
@@ -25,7 +25,7 @@ runs:
         echo "Latest manager tag found: $LATEST_TAG"
         echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
     
-    # Step 2: Get the latest SDK version using a dedicated action if no input is provided.
+    # Step 2: Get the latest SDK version using a dedicated action if no input is provided
     - name: Get latest sdk version
       if: inputs.sdk_version == ''
       id: get_sdk_version
@@ -35,7 +35,7 @@ runs:
         echo "Latest sdk tag found: $LATEST_TAG"
         echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
         
-    # Step 3: Checkout the manager's source code to be built by Docker Compose.
+    # Step 3: Checkout the manager's source code to be built by Docker Compose
     - name: Checkout Manager Source Code
       uses: actions/checkout@v5
       with:
@@ -43,12 +43,12 @@ runs:
         ref: ${{ inputs.manager_version || steps.get_manager_version.outputs.version }}
         path: jobnik-manager
     
-    # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality.
+    # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality
     - name: Build and Deploy the Services
       run: docker compose up --build -d --wait
       shell: bash
 
-    # Step 5: Checkout the SDK's source code to be packed.
+    # Step 5: Checkout the SDK's source code to be packed
     - name: Checkout SDK Source Code
       uses: actions/checkout@v5
       with:
@@ -56,7 +56,7 @@ runs:
         ref: ${{ inputs.sdk_version || steps.get_sdk_version.outputs.version }}
         path: jobnik-sdk
 
-    # Step 6: Set up the Node.js runtime environment for testing.
+    # Step 6: Set up the Node.js runtime environment for testing
     - name: Setup Node.js environment
       uses: actions/setup-node@v5
       with:
@@ -69,17 +69,15 @@ runs:
       working-directory: ./jobnik-sdk
       run: npm ci
     
-    # Step 6: Install dependencies and run the tests.
-    # Using 'run' with shell is the standard way to execute npm commands.
+    # Step 8: Install dependencies and run the tests
     - name: Install Dependencies and Run Tests
       shell: bash
       env:
-        MANAGER_API_URL: http://localhost:8080 
+        JOBNIK_MANAGER_BASE_URL: http://localhost:8080 
         CI: true
       run: |
         PACKED_FILE_NAME=$(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
         echo "Packed File Name: $PACKED_FILE_NAME"
         npm install "./$PACKED_FILE_NAME"
-        echo "installed the package"
         npm ci
         npm test
