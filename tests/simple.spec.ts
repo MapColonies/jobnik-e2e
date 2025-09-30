@@ -1,7 +1,7 @@
 import * as api from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
-import { beforeAll, afterAll, it, describe } from "vitest";
+import { beforeAll, afterAll, it, describe, expect } from "vitest";
 import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { propagation, trace } from "@opentelemetry/api";
@@ -16,6 +16,16 @@ const contextManager = new AsyncHooksContextManager();
 contextManager.enable();
 api.context.setGlobalContextManager(contextManager);
 propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+
+const expectedInitialSummary = {
+  pending: 1,
+  inProgress: 0,
+  completed: 0,
+  failed: 0,
+  created: 0,
+  retried: 0,
+  total: 1,
+};
 
 describe("simple test", () => {
   let jobnikSDK: JobnikSDK;
@@ -32,6 +42,8 @@ describe("simple test", () => {
 
   it("should run a simple test", async () => {
     const producer = jobnikSDK.getProducer();
+    const consumer = jobnikSDK.getConsumer();
+    //#region create job
 
     const jobSampleData = createJobData();
     const job = await producer.createJob(jobSampleData);
@@ -40,9 +52,10 @@ describe("simple test", () => {
       params: { path: { jobId: job.id } },
     });
 
-    const stageSampleDataFirst = createStageData();
-    console.log(stageSampleDataFirst, "ffffff");
+    //#endregion
 
+    //#region create stage 1
+    const stageSampleDataFirst = createStageData();
     const firstStage = await producer.createStage(job.id, stageSampleDataFirst);
     await api.PUT("/stages/{stageId}/status", {
       body: { status: "PENDING" },
@@ -59,7 +72,9 @@ describe("simple test", () => {
       body: { status: "PENDING" },
       params: { path: { taskId: firstTask[0]!.id } },
     });
+    //#endregion
 
+    //#region create stage 2
     const stageSampleDataSecond = createStageData();
     const secondStage = await producer.createStage(
       job.id,
@@ -80,5 +95,93 @@ describe("simple test", () => {
       body: { status: "PENDING" },
       params: { path: { taskId: secondTask[0]!.id } },
     });
+
+    //#endregion
+
+    //#region assert initial state
+    const firstStageSummary = await api.GET("/stages/{stageId}/summary", {
+      params: { path: { stageId: firstStage.id } },
+    });
+    expect(firstStageSummary.data).toMatchObject(expectedInitialSummary);
+
+    const secondStageSummary = await api.GET("/stages/{stageId}/summary", {
+      params: { path: { stageId: secondStage.id } },
+    });
+    expect(secondStageSummary.data).toMatchObject(expectedInitialSummary);
+
+    //#endregion
+
+    // start running the first task
+
+    await consumer.dequeueTask(firstStage.type);
+
+    //#region assert progress
+    // validate that the first task started also progressed the stage
+    const firstStageRunning = await api.GET("/stages/{stageId}", {
+      params: { path: { stageId: firstStage.id } },
+    });
+
+    expect(firstStageRunning.data).toMatchObject({
+      status: "IN_PROGRESS",
+      summary: {
+        total: 1,
+        inProgress: 1,
+        pending: 0,
+        completed: 0,
+        failed: 0,
+        created: 0,
+        retried: 0,
+      },
+    });
+
+    const currentJob = await api.GET("/jobs/{jobId}", {
+      params: { path: { jobId: job.id } },
+    });
+
+    expect(currentJob.data).toMatchObject({
+      status: "IN_PROGRESS",
+      percentage: 0,
+    });
+
+    //#endregion
+
+    //#region complete first task and validate progress
+
+    const completeFirstTaskPromise = consumer.markTaskCompleted(
+      firstTask[0]!.id
+    );
+
+    await expect(completeFirstTaskPromise).resolves.not.toThrow();
+
+    // validate first task completed also progress of stage and job
+    const firstStageCompleted = await api.GET("/stages/{stageId}", {
+      params: { path: { stageId: firstStage.id } },
+    });
+
+    expect(firstStageCompleted.data).toMatchObject({
+      status: "COMPLETED",
+      percentage: 100,
+      summary: {
+        total: 1,
+        completed: 1,
+        inProgress: 0,
+        pending: 0,
+        failed: 0,
+        created: 0,
+        retried: 0,
+      },
+    });
+    // todo - after implement stage ordering logic. add section to validate second stage blocked until first stage completed
+
+    //#endregion
+    //todo - uncomment after implementing auto stage progression
+    // const jobAfterFirstStageCompleted = await api.GET("/jobs/{jobId}", {
+    //   params: { path: { jobId: job.id } },
+    // });
+
+    // expect(jobAfterFirstStageCompleted.data).toMatchObject({
+    //   status: "IN_PROGRESS",
+    //   percentage: 50,
+    // });
   });
 });
