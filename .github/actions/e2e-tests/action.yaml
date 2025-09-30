@@ -77,8 +77,8 @@ runs:
         MANAGER_API_URL: http://localhost:8080 
         CI: true
       run: |
-        PACKED_FILE_NAME = $(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
-        echo "packed file name = $PACKED_FILE_NAME"
+        PACKED_FILE_NAME=$(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
+        echo "Packed File Name: $PACKED_FILE_NAME"
         npm install "./$PACKED_FILE_NAME"
         echo "installed the package"
         npm ci
