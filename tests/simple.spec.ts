@@ -4,7 +4,7 @@ import { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
 import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
-import { propagation, trace } from "@opentelemetry/api";
+import { propagation } from "@opentelemetry/api";
 
 import {
   createJobData,
