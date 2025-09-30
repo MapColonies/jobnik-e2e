@@ -1,0 +1,75 @@
+name: 'Run E2E Integration Tests'
+
+description: 'Sets up a test environment with a specific manager and SDK version, then runs Vitest'
+
+inputs:
+  manager_version:
+    description: 'Manager version to test (e.g., 1.5.2), Leave blank for latest'
+    required: false
+    default: ''
+  sdk_version:
+    description: 'SDK version to test (e.g., 0.8.1), Leave blank for latest'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    # Step 1: Get the latest manager version using a dedicated action if no input is provided.
+    - name: Get latest manager version
+      if: inputs.manager_version == ''
+      id: get_manager_version
+      uses: actions/github-script@v8
+      with:
+        script: |
+          const { data: release } = await github.rest.repos.getLatestRelease({
+            owner: 'MapColonies',
+            repo: 'jobnik-manager'
+          });
+          core.setOutput('version', release.tag_name);
+    
+    # Step 2: Get the latest SDK version using a dedicated action if no input is provided.
+    - name: Get latest sdk version
+      if: inputs.sdk_version == ''
+      id: get_sdk_version
+      uses: actions/github-script@v8
+      with:
+        script: |
+          const { data: release } = await github.rest.repos.getLatestRelease({
+            owner: 'MapColonies',
+            repo: 'jobnik-sdk'
+          });
+          core.setOutput('version', release.tag_name);
+        
+    # Step 3: Check out the manager's source code to be built by Docker Compose.
+    - name: Checkout manager source code
+      uses: actions/checkout@v5
+      with:
+        repository: MapColonies/jobnik-manager
+        ref: ${{ inputs.manager_version || steps.get_manager_version.outputs.version }}
+        path: jobnik-manager
+    
+    # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality.
+    - name: Build and Deploy the Services
+      run: docker-compose up --build -d --wait
+      shell: bash
+
+    # Step 5: Set up the Node.js runtime environment for testing.
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v5
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+    
+    # Step 6: Install dependencies and run the tests.
+    # Using 'run' with shell is the standard way to execute npm commands.
+    - name: Install Dependencies and Run Tests
+      shell: bash
+      env:
+        SDK_VERSION: ${{ inputs.sdk_version || steps.get_sdk_version.outputs.version }}
+        MANAGER_API_URL: http://localhost:8080 
+        CI: true
+      run: |
+        npm ci
+        npm install @map-colonies/jobnik@$SDK_VERSION
+        npm test
