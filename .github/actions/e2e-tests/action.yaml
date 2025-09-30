@@ -45,7 +45,7 @@ runs:
     
     # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality
     - name: Build and Deploy the Services
-      run: docker compose up --build -d --wait
+      run: docker compose up --build -d
       shell: bash
 
     # Step 5: Checkout the SDK's source code to be packed
