@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/MapColonies/jobnik-e2e#readme",
   "dependencies": {
-    "@map-colonies/jobnik-sdk": "file:../jobnik-sdk/map-colonies-jobnik-sdk-1.0.0.tgz",
+    "@map-colonies/jobnik-sdk": "PLACEHOLDER_FOR_SDK_VERSION",
     "@map-colonies/tsconfig": "^1.0.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/context-async-hooks": "^2.1.0",

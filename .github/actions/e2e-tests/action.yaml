@@ -64,6 +64,6 @@ runs:
         MANAGER_API_URL: http://localhost:8080 
         CI: true
       run: |
-        npm ci
         npm install @map-colonies/jobnik@$SDK_VERSION
+        npm ci
         npm test
