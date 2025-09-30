@@ -68,11 +68,11 @@ runs:
     - name: Install Dependencies and Run Tests
       shell: bash
       env:
-        SDK_VERSION: ${{ inputs.sdk_version || steps.get_sdk_version.outputs.version }}
         MANAGER_API_URL: http://localhost:8080 
         CI: true
       run: |
         PACKED_FILE_NAME = $(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
+        echo "packed file name = $PACKED_FILE_NAME"
         npm install "./$PACKED_FILE_NAME"
         npm ci
         npm test
