@@ -35,12 +35,12 @@ runs:
         echo "Latest sdk tag found: $LATEST_TAG"
         echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
         
-    # Step 3: Check out the manager's source code to be built by Docker Compose.
-    - name: Checkout manager source code
+    # Step 3: Checkout the manager's source code to be built by Docker Compose.
+    - name: Checkout Manager Source Code
       uses: actions/checkout@v5
       with:
         repository: MapColonies/jobnik-manager
-        ref: 4c3e716a12edf020c6c8f6982d514cd46fee9a42
+        ref: ${{ inputs.manager_version || steps.get_manager_version.outputs.version }}
         path: jobnik-manager
     
     # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality.
@@ -48,7 +48,15 @@ runs:
       run: docker compose up --build -d --wait
       shell: bash
 
-    # Step 5: Set up the Node.js runtime environment for testing.
+    # Step 5: Checkout the SDK's source code to be packed.
+    - name: Checkout SDK Source Code
+      uses: actions/checkout@v5
+      with:
+        repository: MapColonies/jobnik-sdk
+        ref: ${{ inputs.sdk_version || steps.get_sdk_version.outputs.version }}
+        path: jobnik-sdk
+
+    # Step 6: Set up the Node.js runtime environment for testing.
     - name: Setup Node.js environment
       uses: actions/setup-node@v5
       with:
@@ -64,6 +72,7 @@ runs:
         MANAGER_API_URL: http://localhost:8080 
         CI: true
       run: |
-        npm install @map-colonies/jobnik@$SDK_VERSION
+        PACKED_FILE_NAME = $(npm pack ./jobnik-sdk --pack-destination . --json | jq -r '.[0].filename')
+        npm install "./$PACKED_FILE_NAME"
         npm ci
         npm test
