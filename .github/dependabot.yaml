@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    # Check for updates in the root directory, which covers .github/workflows and .github/actions
+    directory: "/"
+    schedule:
+      # Check for updates to actions every week on Monday
+      interval: "weekly"
+      day: "monday"

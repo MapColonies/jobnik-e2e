@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  manager:
+    build:
+      context: ./jobnik-manager
+    ports:
+      - "8080:8080"
+    environment:
+      # Ensure these variable names match what your manager application expects
+      - DATABASE_URL=postgres://user:password@db:5432/mydatabase
+    depends_on:
+      db:
+        # Waits for the DB to be healthy before starting the manager
+        condition: service_healthy
+
+  postgresql:
+    image: postgres:14
+    ports:
+      - '${POSTGRES_PORT}:5432'
+    container_name: 'postgres-for-testing'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=jobnik
+    command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c random_page_cost=1.0
+    # Disable features to improve performance in tests
+    tmpfs: /var/lib/postgresql/data
