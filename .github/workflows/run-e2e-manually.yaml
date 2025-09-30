@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       manager_version:
-        description: 'Manager version to test. Leave blank for latest.'
+        description: 'Manager version to test (Leave blank for latest)'
         required: false
       sdk_version:
-        description: 'SDK version to test. Leave blank for latest.'
+        description: 'SDK version to test (Leave blank for latest)'
         required: false
 
 jobs:
