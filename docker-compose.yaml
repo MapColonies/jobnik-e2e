@@ -14,10 +14,10 @@ services:
         # Waits for the DB to be healthy before starting the manager
         condition: service_healthy
 
-  postgresql:
+  db:
     image: postgres:14
     ports:
-      - '${POSTGRES_PORT}:5432'
+      - '5432:5432'
     container_name: 'postgres-for-testing'
     environment:
       - POSTGRES_USER=postgres

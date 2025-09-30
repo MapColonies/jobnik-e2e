@@ -13,48 +13,39 @@ inputs:
     default: ''
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     # Step 1: Get the latest manager version using a dedicated action if no input is provided.
     - name: Get latest manager version
       if: inputs.manager_version == ''
       id: get_manager_version
-      uses: actions/github-script@v8
-      with:
-        script: |
-          const { data: release } = await github.rest.repos.getLatestRelease({
-            owner: 'MapColonies',
-            repo: 'jobnik-manager'
-          });
-          core.setOutput('version', release.tag_name);
+      shell: bash
+      run: |
+        LATEST_TAG=$(curl -s https://api.github.com/repos/MapColonies/jobnik-manager/releases/latest | jq -r .tag_name)
+        echo "Latest manager tag found: $LATEST_TAG"
+        echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
     
     # Step 2: Get the latest SDK version using a dedicated action if no input is provided.
     - name: Get latest sdk version
       if: inputs.sdk_version == ''
       id: get_sdk_version
-      uses: actions/github-script@v8
-      with:
-        script: |
-          const { data: release } = await github.rest.repos.getLatestRelease({
-            owner: 'MapColonies',
-            repo: 'jobnik-sdk'
-          });
-          core.setOutput('version', release.tag_name);
+      shell: bash
+      run: |
+        LATEST_TAG=$(curl -s https://api.github.com/repos/MapColonies/jobnik-sdk/releases/latest | jq -r .tag_name)
+        echo "Latest sdk tag found: $LATEST_TAG"
+        echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
         
     # Step 3: Check out the manager's source code to be built by Docker Compose.
     - name: Checkout manager source code
       uses: actions/checkout@v5
       with:
         repository: MapColonies/jobnik-manager
-        ref: ${{ inputs.manager_version || steps.get_manager_version.outputs.version }}
+        ref: 4c3e716a12edf020c6c8f6982d514cd46fee9a42
         path: jobnik-manager
-    
-    - name: Set up Docker Compose
-      uses: docker/setup-compose-action@v1
     
     # Step 4: Build, deploy, and wait for services to be healthy using Docker's native functionality.
     - name: Build and Deploy the Services
-      run: docker-compose up --build -d --wait
+      run: docker compose up --build -d --wait
       shell: bash
 
     # Step 5: Set up the Node.js runtime environment for testing.
