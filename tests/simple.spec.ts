@@ -33,7 +33,7 @@ describe("simple test", () => {
 
   beforeAll(() => {
     jobnikSDK = createJobnikSDKInstance();
-    api = createApi();
+    api = jobnikSDK.getApiClient();
   });
 
   afterAll(() => {
@@ -47,20 +47,12 @@ describe("simple test", () => {
 
     const jobSampleData = createJobData();
     const job = await producer.createJob(jobSampleData);
-    await api.PUT("/jobs/{jobId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { jobId: job.id } },
-    });
 
     //#endregion
 
     //#region create stage 1
     const stageSampleDataFirst = createStageData();
     const firstStage = await producer.createStage(job.id, stageSampleDataFirst);
-    await api.PUT("/stages/{stageId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { stageId: firstStage.id } },
-    });
 
     const taskSampleDataFirst = createTaskData();
     const firstTask = await producer.createTasks(
@@ -68,10 +60,6 @@ describe("simple test", () => {
       firstStage.type,
       [taskSampleDataFirst]
     );
-    await api.PUT("/tasks/{taskId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { taskId: firstTask[0]!.id } },
-    });
     //#endregion
 
     //#region create stage 2
@@ -80,21 +68,11 @@ describe("simple test", () => {
       job.id,
       stageSampleDataSecond
     );
-    await api.PUT("/stages/{stageId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { stageId: secondStage.id } },
-    });
 
     const taskSampleDataSecond = createTaskData();
-    const secondTask = await producer.createTasks(
-      secondStage.id,
-      secondStage.type,
-      [taskSampleDataSecond]
-    );
-    await api.PUT("/tasks/{taskId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { taskId: secondTask[0]!.id } },
-    });
+    await producer.createTasks(secondStage.id, secondStage.type, [
+      taskSampleDataSecond,
+    ]);
 
     //#endregion
 
@@ -108,6 +86,8 @@ describe("simple test", () => {
       params: { path: { stageId: secondStage.id } },
     });
     expect(secondStageSummary.data).toMatchObject(expectedInitialSummary);
+
+    expect(secondStage.status).toBe("CREATED");
 
     //#endregion
 
@@ -171,17 +151,62 @@ describe("simple test", () => {
         retried: 0,
       },
     });
-    // todo - after implement stage ordering logic. add section to validate second stage blocked until first stage completed
+
+    //#region Validate second stage now available for dequeueing - changed to PENDING
+    const secondStageAfterFirstCompleted = await api.GET("/stages/{stageId}", {
+      params: { path: { stageId: secondStage.id } },
+    });
+
+    const jobAfterFirstStageCompleted = await api.GET("/jobs/{jobId}", {
+      params: { path: { jobId: job.id } },
+    });
+
+    expect(secondStageAfterFirstCompleted.data!.status).toBe("PENDING");
+    expect(jobAfterFirstStageCompleted.data).toMatchObject({
+      status: "IN_PROGRESS",
+      percentage: 50,
+    });
 
     //#endregion
-    //todo - uncomment after implementing auto stage progression
-    // const jobAfterFirstStageCompleted = await api.GET("/jobs/{jobId}", {
-    //   params: { path: { jobId: job.id } },
-    // });
 
-    // expect(jobAfterFirstStageCompleted.data).toMatchObject({
-    //   status: "IN_PROGRESS",
-    //   percentage: 50,
-    // });
+    //#region complete second stage with related task and validate job completed
+    const dequeuedSecondStageTask = await consumer.dequeueTask(
+      secondStage.type
+    );
+
+    const completeSecondTaskPromise = consumer.markTaskCompleted(
+      dequeuedSecondStageTask!.id
+    );
+
+    await expect(completeSecondTaskPromise).resolves.not.toThrow();
+
+    const secondStageCompleted = await api.GET("/stages/{stageId}", {
+      params: { path: { stageId: secondStage.id } },
+    });
+
+    expect(secondStageCompleted.data).toMatchObject({
+      status: "COMPLETED",
+      percentage: 100,
+      summary: {
+        total: 1,
+        completed: 1,
+        inProgress: 0,
+        pending: 0,
+        failed: 0,
+        created: 0,
+        retried: 0,
+      },
+    });
+
+    const jobCompleted = await api.GET("/jobs/{jobId}", {
+      params: { path: { jobId: job.id } },
+    });
+
+    expect(jobCompleted.data).toMatchObject({
+      status: "COMPLETED",
+      percentage: 100,
+    });
+
+    //#endregion
   });
 });

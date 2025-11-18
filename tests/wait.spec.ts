@@ -23,7 +23,7 @@ describe("wait test", () => {
 
   beforeAll(() => {
     jobnikSDK = createJobnikSDKInstance();
-    api = createApi();
+    api = jobnikSDK.getApiClient();
   });
 
   afterAll(() => {
@@ -37,17 +37,16 @@ describe("wait test", () => {
 
     const jobSampleData = createJobData();
     const job = await producer.createJob(jobSampleData);
-    await api.PUT("/jobs/{jobId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { jobId: job.id } },
-    });
 
     //#endregion
 
     //#region create stage
     const stageSampleData = createStageData();
-    const stage = await producer.createStage(job.id, stageSampleData);
-    await api.PUT("/stages/{stageId}/status", {
+    const stage = await producer.createStage(job.id, {
+      ...stageSampleData,
+      startAsWaiting: true,
+    } as Parameters<typeof producer.createStage>[1]);
+    const x = await api.PUT("/stages/{stageId}/status", {
       body: { status: "WAITING" },
       params: { path: { stageId: stage.id } },
     });
@@ -61,8 +60,8 @@ describe("wait test", () => {
       params: { path: { taskId: task[0]!.id } },
     });
     //#endregion
-
     const dequeueResult = await consumer.dequeueTask(stage.type);
+
     expect(dequeueResult).toBeNull();
 
     //#region unwait stage
@@ -74,6 +73,7 @@ describe("wait test", () => {
 
     //#region dequeue task after unpause
     const dequeueResultAfterUnpause = await consumer.dequeueTask(stage.type);
+
     expect(dequeueResultAfterUnpause).not.toBeNull();
     //#endregion
   });

@@ -23,7 +23,7 @@ describe("pause test", () => {
 
   beforeAll(() => {
     jobnikSDK = createJobnikSDKInstance();
-    api = createApi();
+    api = jobnikSDK.getApiClient();
   });
 
   afterAll(() => {
