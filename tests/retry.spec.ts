@@ -1,6 +1,6 @@
 import type { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import {
   createJobData,
   createStageData,
@@ -152,6 +152,7 @@ describe("Task Retry Test", () => {
 
     //#region First attempt - fail
     const dequeuedTask1 = await consumer.dequeueTask(stage.type);
+
     await consumer.markTaskFailed(dequeuedTask1!.id);
 
     const retriedTask = await api.GET("/tasks/{taskId}", {

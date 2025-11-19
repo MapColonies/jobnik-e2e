@@ -1,6 +1,6 @@
 import type { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import {
   createJobData,
   createStageData,
@@ -63,6 +63,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete first stage
     await consumer.dequeueTask(stage1.type);
+
     await consumer.markTaskCompleted(task1!.id);
 
     const completedStage1 = await api.GET("/stages/{stageId}", {
@@ -95,6 +96,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete second stage
     const dequeuedTask2 = await consumer.dequeueTask(stage2.type);
+
     await consumer.markTaskCompleted(dequeuedTask2!.id);
 
     const completedStage2 = await api.GET("/stages/{stageId}", {
@@ -122,6 +124,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete third stage
     const dequeuedTask3 = await consumer.dequeueTask(stage3.type);
+    
     await consumer.markTaskCompleted(dequeuedTask3!.id);
 
     const completedStage3 = await api.GET("/stages/{stageId}", {
@@ -228,11 +231,9 @@ describe("Multiple Stages Workflow Tests", () => {
 
     // Complete each stage and track percentage
     for (const stage of [stage1, stage2, stage3, stage4]) {
-      await consumer.dequeueTask(stage.type);
-      const task = await api.GET("/tasks", {
-        params: { query: { stage_id: stage.id, status: "IN_PROGRESS" } },
-      });
-      await consumer.markTaskCompleted(task.data![0]!.id);
+      const dequeuedTask = await consumer.dequeueTask(stage.type);
+
+      await consumer.markTaskCompleted(dequeuedTask!.id);
 
       const jobStatus = await api.GET("/jobs/{jobId}", {
         params: { path: { jobId: job.id } },
@@ -280,16 +281,19 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete first stage
     const task1 = await consumer.dequeueTask(stage1.type);
+
     await consumer.markTaskCompleted(task1!.id);
     //#endregion
 
     //#region Fail second stage
     const task2 = await consumer.dequeueTask(stage2.type);
+
     await consumer.markTaskFailed(task2!.id);
 
     const failedStage2 = await api.GET("/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
+
     expect(failedStage2.data?.status).toBe("FAILED");
     //#endregion
 
@@ -337,6 +341,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete first stage
     const task1 = await consumer.dequeueTask(stage1.type);
+
     await consumer.markTaskCompleted(task1!.id);
 
     const completedStage1 = await api.GET("/stages/{stageId}", {
@@ -371,12 +376,14 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete second stage
     const task2 = await consumer.dequeueTask(stage2.type);
+
     expect(task2).not.toBeNull();
     await consumer.markTaskCompleted(task2!.id);
     //#endregion
 
     //#region Complete third stage
     const task3 = await consumer.dequeueTask(stage3.type);
+
     await consumer.markTaskCompleted(task3!.id);
     //#endregion
 

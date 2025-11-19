@@ -34,6 +34,7 @@ describe("Delete Job Tests", () => {
     await producer.createTasks(stage.id, stage.type, [createTaskData()]);
 
     const dequeuedTask = await consumer.dequeueTask(stage.type);
+
     await consumer.markTaskCompleted(dequeuedTask!.id);
 
     const completedJob = await api.GET("/jobs/{jobId}", {
@@ -69,7 +70,6 @@ describe("Delete Job Tests", () => {
 
     //#region Create and fail a job
     const jobData = createJobData();
-    const start = performance.now();
     const job = await producer.createJob(jobData);
 
     const stageData = createStageData();
@@ -325,6 +325,7 @@ describe("Delete Job Tests", () => {
 
     await consumer.dequeueTask(stage2.type);
     await consumer.markTaskCompleted(task2!.id);
+
     //#endregion
 
     //#region Delete the job

@@ -2,7 +2,7 @@ import * as api from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { propagation } from "@opentelemetry/api";
 

@@ -1,6 +1,6 @@
 import type { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import {
   createJobData,
   createStageData,
@@ -92,8 +92,10 @@ describe("Job Abortion Test", () => {
     await producer.createTasks(stage.id, stage.type, [taskData]);
 
     const dequeuedTask = await consumer.dequeueTask(stage.type);
-    await consumer.markTaskCompleted(dequeuedTask!.id);
 
+    expect(dequeuedTask).toHaveProperty("stageId", stage.id);
+
+    await consumer.markTaskCompleted(dequeuedTask!.id);
     const completedJob = await api.GET("/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
