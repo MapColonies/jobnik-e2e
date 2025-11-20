@@ -269,7 +269,7 @@ describe("Delete Job Tests", () => {
     });
 
     expect(pausedJob.data?.status).toBe("PAUSED");
-    // #endregion
+    //#endregion
 
     //#region Try to delete the paused job
     const deleteResponse = await api.DELETE("/jobs/{jobId}", {
