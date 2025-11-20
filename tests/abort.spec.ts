@@ -17,7 +17,7 @@ describe("Job Abortion Test", () => {
   });
 
   afterAll(() => {
-    // teardown codek
+    // teardown code
   });
 
   it("should abort a job in progress and cascade to all stages and tasks", async () => {
