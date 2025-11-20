@@ -59,7 +59,6 @@ describe("Job Abortion Test", () => {
     expect(abortResponse).toMatchObject({
       data: { code: "JOB_MODIFIED_SUCCESSFULLY" },
     });
-
     //#endregion
 
     //#region Verify job is aborted
