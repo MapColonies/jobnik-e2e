@@ -124,7 +124,6 @@ describe("Multiple Stages Workflow Tests", () => {
 
     //#region Complete third stage
     const dequeuedTask3 = await consumer.dequeueTask(stage3.type);
-    
     await consumer.markTaskCompleted(dequeuedTask3!.id);
 
     const completedStage3 = await api.GET("/stages/{stageId}", {
