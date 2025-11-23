@@ -25,79 +25,39 @@ describe("Task Retry Test", () => {
     const consumer = jobnikSDK.getConsumer();
 
     //#region Create job with stage and task with maxAttempts
-    const jobSampleData = createJobData();
-    const job = await producer.createJob(jobSampleData);
-
-    const stageData = createStageData();
-    const stage = await producer.createStage(job.id, stageData);
-
-    const taskData = { ...createTaskData(), maxAttempts: 3 };
-    const [task] = await producer.createTasks(stage.id, stage.type, [taskData]);
+    const job = await producer.createJob(createJobData());
+    const stage = await producer.createStage(job.id, createStageData());
+    const [task] = await producer.createTasks(stage.id, stage.type, [
+      { ...createTaskData(), maxAttempts: 3 },
+    ]);
 
     expect(task!.maxAttempts).toBe(3);
     expect(task!.attempts).toBe(0);
     expect(task!.status).toBe("PENDING");
     //#endregion
 
-    //#region First attempt - dequeue and fail
-    const dequeuedTask1 = await consumer.dequeueTask(stage.type);
+    //#region Perform 3 attempts - each fails
+    const expectedStatuses = ["RETRIED", "RETRIED", "FAILED"] as const;
 
-    expect(dequeuedTask1!.id).toBe(task!.id);
-    expect(dequeuedTask1!.status).toBe("IN_PROGRESS");
-    expect(dequeuedTask1!.attempts).toBe(0);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const dequeuedTask = await consumer.dequeueTask(stage.type);
 
-    // Mark as failed
-    await consumer.markTaskFailed(dequeuedTask1!.id);
+      expect(dequeuedTask!.id).toBe(task!.id);
+      expect(dequeuedTask!.status).toBe("IN_PROGRESS");
+      expect(dequeuedTask!.attempts).toBe(attempt);
 
-    const retriedTask1 = await api.GET("/tasks/{taskId}", {
-      params: { path: { taskId: task!.id } },
-    });
+      await consumer.markTaskFailed(dequeuedTask!.id);
 
-    expect(retriedTask1.data).toMatchObject({
-      status: "RETRIED",
-      attempts: 1,
-      maxAttempts: 3,
-    });
-    //#endregion
+      const taskAfterFail = await api.GET("/tasks/{taskId}", {
+        params: { path: { taskId: task!.id } },
+      });
 
-    //#region Second attempt - dequeue and fail again
-    const dequeuedTask2 = await consumer.dequeueTask(stage.type);
-
-    expect(dequeuedTask2!.id).toBe(task!.id);
-    expect(dequeuedTask2!.status).toBe("IN_PROGRESS");
-    expect(dequeuedTask2!.attempts).toBe(1);
-
-    await consumer.markTaskFailed(dequeuedTask2!.id);
-
-    const retriedTask2 = await api.GET("/tasks/{taskId}", {
-      params: { path: { taskId: task!.id } },
-    });
-
-    expect(retriedTask2.data).toMatchObject({
-      status: "RETRIED",
-      attempts: 2,
-      maxAttempts: 3,
-    });
-    //#endregion
-
-    //#region Third attempt (final) - dequeue and fail, should reach FAILED state
-    const dequeuedTask3 = await consumer.dequeueTask(stage.type);
-
-    expect(dequeuedTask3!.id).toBe(task!.id);
-    expect(dequeuedTask3!.status).toBe("IN_PROGRESS");
-    expect(dequeuedTask3!.attempts).toBe(2);
-
-    await consumer.markTaskFailed(dequeuedTask3!.id);
-
-    const finalTask = await api.GET("/tasks/{taskId}", {
-      params: { path: { taskId: task!.id } },
-    });
-
-    expect(finalTask.data).toMatchObject({
-      status: "FAILED",
-      attempts: 3,
-      maxAttempts: 3,
-    });
+      expect(taskAfterFail.data).toMatchObject({
+        status: expectedStatuses[attempt],
+        attempts: attempt + 1,
+        maxAttempts: 3,
+      });
+    }
     //#endregion
 
     //#region Verify stage is marked as failed
@@ -140,14 +100,11 @@ describe("Task Retry Test", () => {
     const consumer = jobnikSDK.getConsumer();
 
     //#region Create job with stage and task
-    const jobSampleData = createJobData();
-    const job = await producer.createJob(jobSampleData);
-
-    const stageData = createStageData();
-    const stage = await producer.createStage(job.id, stageData);
-
-    const taskData = { ...createTaskData(), maxAttempts: 3 };
-    const [task] = await producer.createTasks(stage.id, stage.type, [taskData]);
+    const job = await producer.createJob(createJobData());
+    const stage = await producer.createStage(job.id, createStageData());
+    const [task] = await producer.createTasks(stage.id, stage.type, [
+      { ...createTaskData(), maxAttempts: 3 },
+    ]);
     //#endregion
 
     //#region First attempt - fail
@@ -218,16 +175,10 @@ describe("Task Retry Test", () => {
     const consumer = jobnikSDK.getConsumer();
 
     //#region Create job with stage and task without specifying maxAttempts
-    const jobSampleData = createJobData();
-    const job = await producer.createJob(jobSampleData);
+    const job = await producer.createJob(createJobData());
+    const stage = await producer.createStage(job.id, createStageData());
+    const [task] = await producer.createTasks(stage.id, stage.type, [createTaskData()]);
 
-    const stageData = createStageData();
-    const stage = await producer.createStage(job.id, stageData);
-
-    const taskData = createTaskData();
-    const [task] = await producer.createTasks(stage.id, stage.type, [taskData]);
-
-    // System should have a default maxAttempts value (likely 3)
     expect(task!.maxAttempts).toBeGreaterThan(0);
     //#endregion
 

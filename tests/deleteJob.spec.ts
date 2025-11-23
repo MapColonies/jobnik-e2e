@@ -20,126 +20,45 @@ describe("Delete Job Tests", () => {
     // teardown code
   });
 
-  it("should delete a completed job successfully", async () => {
+  it.each([
+    { testName: "completed", expectedStatus: "COMPLETED" as const },
+    { testName: "failed", expectedStatus: "FAILED" as const },
+    { testName: "aborted", expectedStatus: "ABORTED" as const },
+  ])("should delete a $testName job successfully", async ({ testName, expectedStatus }) => {
     const producer = jobnikSDK.getProducer();
     const consumer = jobnikSDK.getConsumer();
 
-    //#region Create and complete a job
+    //#region Create and setup job to expected status
     const jobData = createJobData();
     const job = await producer.createJob(jobData);
 
     const stageData = createStageData();
     const stage = await producer.createStage(job.id, stageData);
 
-    await producer.createTasks(stage.id, stage.type, [createTaskData()]);
-
-    const dequeuedTask = await consumer.dequeueTask(stage.type);
-
-    await consumer.markTaskCompleted(dequeuedTask!.id);
-
-    const completedJob = await api.GET("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(completedJob.data?.status).toBe("COMPLETED");
-    //#endregion
-
-    //#region Delete the completed job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(deleteResponse.response.status).toBe(200);
-    expect(deleteResponse.data).toMatchObject({
-      code: "JOB_DELETED_SUCCESSFULLY",
-    });
-    //#endregion
-
-    //#region Verify job is deleted (should return 404)
-    const getDeletedJob = await api.GET("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(getDeletedJob.response.status).toBe(404);
-    //#endregion
-  });
-
-  it("should delete a failed job successfully", async () => {
-    const producer = jobnikSDK.getProducer();
-    const consumer = jobnikSDK.getConsumer();
-
-    //#region Create and fail a job
-    const jobData = createJobData();
-    const job = await producer.createJob(jobData);
-
-    const stageData = createStageData();
-    const stage = await producer.createStage(job.id, stageData);
-
-    const taskData = { ...createTaskData(), maxAttempts: 1 };
+    const taskData = testName === "failed" ? { ...createTaskData(), maxAttempts: 1 } : createTaskData();
     await producer.createTasks(stage.id, stage.type, [taskData]);
 
     const dequeuedTask = await consumer.dequeueTask(stage.type);
 
-    await consumer.markTaskFailed(dequeuedTask!.id);
+    if (testName === "completed") {
+      await consumer.markTaskCompleted(dequeuedTask!.id);
+    } else if (testName === "failed") {
+      await consumer.markTaskFailed(dequeuedTask!.id);
+    } else if (testName === "aborted") {
+      await api.PUT("/jobs/{jobId}/status", {
+        params: { path: { jobId: job.id } },
+        body: { status: "ABORTED" },
+      });
+    }
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const failedJob = await api.GET("/jobs/{jobId}", {
+    const jobAfterSetup = await api.GET("/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
-    expect(failedJob.data?.status).toBe("FAILED");
+    expect(jobAfterSetup.data?.status).toBe(expectedStatus);
     //#endregion
 
-    //#region Delete the failed job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(deleteResponse.response.status).toBe(200);
-    expect(deleteResponse.data).toMatchObject({
-      code: "JOB_DELETED_SUCCESSFULLY",
-    });
-    //#endregion
-
-    // #region Verify job is deleted
-    const getDeletedJob = await api.GET("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(getDeletedJob.response.status).toBe(404);
-    //#endregion
-  });
-
-  it("should delete an aborted job successfully", async () => {
-    const producer = jobnikSDK.getProducer();
-    const consumer = jobnikSDK.getConsumer();
-
-    //#region Create and abort a job
-    const jobData = createJobData();
-    const job = await producer.createJob(jobData);
-
-    const stageData = createStageData();
-    const stage = await producer.createStage(job.id, stageData);
-
-    await producer.createTasks(stage.id, stage.type, [createTaskData()]);
-
-    // Start the job
-    await consumer.dequeueTask(stage.type);
-
-    // Abort it
-    await api.PUT("/jobs/{jobId}/status", {
-      params: { path: { jobId: job.id } },
-      body: { status: "ABORTED" },
-    });
-
-    const abortedJob = await api.GET("/jobs/{jobId}", {
-      params: { path: { jobId: job.id } },
-    });
-
-    expect(abortedJob.data?.status).toBe("ABORTED");
-    //#endregion
-
-    //#region Delete the aborted job
+    //#region Delete the job
     const deleteResponse = await api.DELETE("/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
