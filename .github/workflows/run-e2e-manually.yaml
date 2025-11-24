@@ -16,7 +16,7 @@ jobs:
     steps:
       # Step 1: Checkout the e2e-tests repo which contains the action and docker-compose file
       - name: Checkout E2E repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Run the composite action
       - name: Run E2E Test Action
