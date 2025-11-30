@@ -14,11 +14,11 @@ jobs:
   e2e-test-run:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout the e2e-tests repo which contains the action and docker-compose file
-      - name: Checkout E2E repository
+      # Step 1: Checkout this repository
+      - name: Checkout Repository
         uses: actions/checkout@v5
 
-      # Step 2: Run the composite action
+      # Step 2: Run the E2E Test Action
       - name: Run E2E Test Action
         uses: ./.github/actions/e2e-tests # This path points to the action you just created
         with:
