@@ -42,11 +42,8 @@ describe("wait test", () => {
 
     //#region create stage
     const stageSampleData = createStageData();
-    const stage = await producer.createStage(job.id, {
-      ...stageSampleData,
-      startAsWaiting: true,
-    } as Parameters<typeof producer.createStage>[1]);
-    const x = await api.PUT("/stages/{stageId}/status", {
+    const stage = await producer.createStage(job.id, stageSampleData, true);
+    await api.PUT("/stages/{stageId}/status", {
       body: { status: "WAITING" },
       params: { path: { stageId: stage.id } },
     });
