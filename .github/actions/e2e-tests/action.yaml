@@ -18,6 +18,8 @@ runs:
     # Step 1: Checkout this repo which contains the action and docker-compose file
     - name: Checkout E2E repository
       uses: actions/checkout@v5
+      with:
+        repository: MapColonies/jobnik-e2e
 
     # Step 2: Checkout the manager's source code
     - name: Checkout Manager Source Code
