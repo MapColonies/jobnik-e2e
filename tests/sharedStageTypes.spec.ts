@@ -2,7 +2,7 @@ import * as api from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { propagation } from "@opentelemetry/api";
 import { faker } from "@faker-js/faker";
@@ -25,7 +25,7 @@ describe("shared stage types test", () => {
 
   beforeAll(() => {
     jobnikSDK = createJobnikSDKInstance();
-    api = createApi();
+    api = jobnikSDK.getApiClient();
   });
 
   afterAll(() => {
@@ -39,59 +39,29 @@ describe("shared stage types test", () => {
     //#region create first job
     const jobSampleData1 = createJobData();
     const job1 = await producer.createJob(jobSampleData1);
-    await api.PUT("/jobs/{jobId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { jobId: job1.id } },
-    });
 
     //#endregion
 
     //#region create stage
     const stageSampleData1 = createStageData({ type: sharedStageType });
     const stage1 = await producer.createStage(job1.id, stageSampleData1);
-    await api.PUT("/stages/{stageId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { stageId: stage1.id } },
-    });
 
     const taskSampleData1 = createTaskData();
-    const task = await producer.createTasks(stage1.id, stage1.type, [
-      taskSampleData1,
-    ]);
-
-    await api.PUT("/tasks/{taskId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { taskId: task[0]!.id } },
-    });
+    await producer.createTasks(stage1.id, stage1.type, [taskSampleData1]);
     //#endregion
 
     //#region create second job
     const jobSampleData2 = createJobData();
     const job2 = await producer.createJob(jobSampleData2);
-    await api.PUT("/jobs/{jobId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { jobId: job2.id } },
-    });
-
     //#endregion
 
     //#region create stage
     const stageSampleData2 = createStageData({ type: sharedStageType });
     const stage2 = await producer.createStage(job2.id, stageSampleData2);
-    await api.PUT("/stages/{stageId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { stageId: stage2.id } },
-    });
 
     const taskSampleData2 = createTaskData();
-    const task2 = await producer.createTasks(stage2.id, stage2.type, [
-      taskSampleData2,
-    ]);
+    await producer.createTasks(stage2.id, stage2.type, [taskSampleData2]);
 
-    await api.PUT("/tasks/{taskId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { taskId: task2[0]!.id } },
-    });
     //#endregion
 
     const dequeueResult1 = await consumer.dequeueTask(sharedStageType);

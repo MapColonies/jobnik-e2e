@@ -2,7 +2,7 @@ import * as api from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { ApiClient, JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { beforeAll, afterAll, it, describe, expect } from "vitest";
-import { createJobnikSDKInstance, createApi } from "../infrastructure/sdk";
+import { createJobnikSDKInstance } from "../infrastructure/sdk";
 import { W3CTraceContextPropagator } from "@opentelemetry/core";
 import { propagation } from "@opentelemetry/api";
 
@@ -23,7 +23,7 @@ describe("wait test", () => {
 
   beforeAll(() => {
     jobnikSDK = createJobnikSDKInstance();
-    api = createApi();
+    api = jobnikSDK.getApiClient();
   });
 
   afterAll(() => {
@@ -37,16 +37,12 @@ describe("wait test", () => {
 
     const jobSampleData = createJobData();
     const job = await producer.createJob(jobSampleData);
-    await api.PUT("/jobs/{jobId}/status", {
-      body: { status: "PENDING" },
-      params: { path: { jobId: job.id } },
-    });
 
     //#endregion
 
     //#region create stage
     const stageSampleData = createStageData();
-    const stage = await producer.createStage(job.id, stageSampleData);
+    const stage = await producer.createStage(job.id, stageSampleData, true);
     await api.PUT("/stages/{stageId}/status", {
       body: { status: "WAITING" },
       params: { path: { stageId: stage.id } },
@@ -61,8 +57,8 @@ describe("wait test", () => {
       params: { path: { taskId: task[0]!.id } },
     });
     //#endregion
-
     const dequeueResult = await consumer.dequeueTask(stage.type);
+
     expect(dequeueResult).toBeNull();
 
     //#region unwait stage
@@ -74,6 +70,7 @@ describe("wait test", () => {
 
     //#region dequeue task after unpause
     const dequeueResultAfterUnpause = await consumer.dequeueTask(stage.type);
+
     expect(dequeueResultAfterUnpause).not.toBeNull();
     //#endregion
   });

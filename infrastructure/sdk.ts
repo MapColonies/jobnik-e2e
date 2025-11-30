@@ -1,4 +1,4 @@
-import { JobnikSDK, createApiClient } from "@map-colonies/jobnik-sdk";
+import { JobnikSDK } from "@map-colonies/jobnik-sdk";
 import { Registry } from "prom-client";
 
 const jobnikManagerUrl =
@@ -6,15 +6,11 @@ const jobnikManagerUrl =
 
 export function createJobnikSDKInstance(): JobnikSDK {
   const jobnikSDK = new JobnikSDK({
-    metricsRegistry: new Registry(),
     baseUrl: jobnikManagerUrl,
     httpClientOptions: {
       agentOptions: {},
     },
+    metricsRegistry: new Registry(),
   });
   return jobnikSDK;
-}
-
-export function createApi() {
-  return createApiClient(jobnikManagerUrl);
 }

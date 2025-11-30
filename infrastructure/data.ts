@@ -4,7 +4,7 @@ import { Priorities } from "./constants";
 
 function createJobData(overrides?: Partial<NewJob<string>>): NewJob<string> {
   return {
-    name: faker.word.sample({ length: { min: 5, max: 15 } }),
+    name: `${faker.word.noun()}-${Date.now()}-${faker.string.alphanumeric(6)}`,
     priority: faker.helpers.arrayElement(Priorities),
     data: faker.airline.airline() as unknown as Record<string, unknown>,
     userMetadata: faker.science.chemicalElement() as unknown as Record<
@@ -19,7 +19,7 @@ function createStageData(
   overrides?: Partial<NewStage<string>>
 ): NewStage<string> {
   return {
-    type: faker.word.sample({ length: { min: 5, max: 15 } }),
+    type: `${faker.word.noun()}-${Date.now()}-${faker.string.alphanumeric(6)}`,
     data: faker.airline.airline() as unknown as Record<string, unknown>,
     userMetadata: faker.science.chemicalElement() as unknown as Record<
       string,
