@@ -30,7 +30,7 @@ git clone https://github.com/MapColonies/jobnik-e2e.git
 cd jobnik-e2e
 
 # Install dependencies
-npm install
+npm ci
 
 # Run tests (requires jobnik-manager running separately or via Docker)
 npm test
