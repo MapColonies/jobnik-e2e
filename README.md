@@ -20,9 +20,7 @@ Jobnik E2E is a comprehensive test suite for validating the Jobnik platform, a d
 
 ## Prerequisites
 
-- **Node.js** v18+
-- **Docker** v20+ & **Docker Compose** v2+
-- **npm** v8+
+- **Node** v24+
 
 ## Quick Start
 
