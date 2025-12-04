@@ -328,6 +328,7 @@ describe("Multiple Stages Workflow Tests", () => {
     const stage1 = await producer.createStage(job.id, createStageData());
     await producer.createTasks(stage1.id, stage1.type, [createTaskData()]);
 
+
     const stage2 = await producer.createStage(job.id,createStageData(),true);
      
     await producer.createTasks(stage2.id, stage2.type, [createTaskData()]);
