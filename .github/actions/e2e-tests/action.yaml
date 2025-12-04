@@ -31,9 +31,7 @@ runs:
     
     # Step 3: Build, deploy, and wait for services to be healthy
     - name: Build and Deploy the Services
-      run: docker compose up --build --waitmanager  Built
-560
-
+      run: docker compose up --build --wait
       shell: bash
 
     # Step 4: Checkout the SDK's source code
