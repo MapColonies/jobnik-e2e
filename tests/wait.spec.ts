@@ -43,7 +43,7 @@ describe("wait test", () => {
     //#region create stage
     const stageSampleData = createStageData();
     const stage = await producer.createStage(job.id, stageSampleData, true);
-    await api.PUT("/stages/{stageId}/status", {
+    await api.PUT("/v1/stages/{stageId}/status", {
       body: { status: "WAITING" },
       params: { path: { stageId: stage.id } },
     });
@@ -52,7 +52,7 @@ describe("wait test", () => {
     const task = await producer.createTasks(stage.id, stage.type, [
       taskSampleData,
     ]);
-    await api.PUT("/tasks/{taskId}/status", {
+    await api.PUT("/v1/tasks/{taskId}/status", {
       body: { status: "PENDING" },
       params: { path: { taskId: task[0]!.id } },
     });
@@ -62,7 +62,7 @@ describe("wait test", () => {
     expect(dequeueResult).toBeNull();
 
     //#region unwait stage
-    await api.PUT("/stages/{stageId}/status", {
+    await api.PUT("/v1/stages/{stageId}/status", {
       body: { status: "PENDING" },
       params: { path: { stageId: stage.id } },
     });
