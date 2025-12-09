@@ -45,17 +45,17 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify initial states - only first stage should be PENDING
-    const initialStage1 = await api.GET("/stages/{stageId}", {
+    const initialStage1 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage1.id } },
     });
     expect(initialStage1.data?.status).toBe("PENDING");
 
-    const initialStage2 = await api.GET("/stages/{stageId}", {
+    const initialStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
     expect(initialStage2.data?.status).toBe("CREATED");
 
-    const initialStage3 = await api.GET("/stages/{stageId}", {
+    const initialStage3 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage3.id } },
     });
     expect(initialStage3.data?.status).toBe("CREATED");
@@ -66,7 +66,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     await consumer.markTaskCompleted(task1!.id);
 
-    const completedStage1 = await api.GET("/stages/{stageId}", {
+    const completedStage1 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage1.id } },
     });
     expect(completedStage1.data?.status).toBe("COMPLETED");
@@ -74,19 +74,19 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify second stage now available (PENDING)
-    const activatedStage2 = await api.GET("/stages/{stageId}", {
+    const activatedStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
     expect(activatedStage2.data?.status).toBe("PENDING");
 
-    const stillCreatedStage3 = await api.GET("/stages/{stageId}", {
+    const stillCreatedStage3 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage3.id } },
     });
     expect(stillCreatedStage3.data?.status).toBe("CREATED");
     //#endregion
 
     //#region Verify job progress after first stage
-    const jobAfterStage1 = await api.GET("/jobs/{jobId}", {
+    const jobAfterStage1 = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(jobAfterStage1.data?.status).toBe("IN_PROGRESS");
@@ -99,21 +99,21 @@ describe("Multiple Stages Workflow Tests", () => {
 
     await consumer.markTaskCompleted(dequeuedTask2!.id);
 
-    const completedStage2 = await api.GET("/stages/{stageId}", {
+    const completedStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
     expect(completedStage2.data?.status).toBe("COMPLETED");
     //#endregion
 
     //#region Verify third stage now available
-    const activatedStage3 = await api.GET("/stages/{stageId}", {
+    const activatedStage3 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage3.id } },
     });
     expect(activatedStage3.data?.status).toBe("PENDING");
     //#endregion
 
     //#region Verify job progress after second stage
-    const jobAfterStage2 = await api.GET("/jobs/{jobId}", {
+    const jobAfterStage2 = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(jobAfterStage2.data?.percentage).toBeGreaterThan(
@@ -126,14 +126,14 @@ describe("Multiple Stages Workflow Tests", () => {
     const dequeuedTask3 = await consumer.dequeueTask(stage3.type);
     await consumer.markTaskCompleted(dequeuedTask3!.id);
 
-    const completedStage3 = await api.GET("/stages/{stageId}", {
+    const completedStage3 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage3.id } },
     });
     expect(completedStage3.data?.status).toBe("COMPLETED");
     //#endregion
 
     //#region Verify job completed
-    const completedJob = await api.GET("/jobs/{jobId}", {
+    const completedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(completedJob.data?.status).toBe("COMPLETED");
@@ -170,7 +170,7 @@ describe("Multiple Stages Workflow Tests", () => {
       }
 
       // Verify stage is completed
-      const stageStatus = await api.GET("/stages/{stageId}", {
+      const stageStatus = await api.GET("/v1/stages/{stageId}", {
         params: { path: { stageId: stage.id } },
       });
       expect(stageStatus.data?.status).toBe("COMPLETED");
@@ -178,7 +178,7 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify all stages completed in order
-    const allStages = await api.GET("/jobs/{jobId}/stages", {
+    const allStages = await api.GET("/v1/jobs/{jobId}/stages", {
       params: { path: { jobId: job.id } },
     });
 
@@ -190,7 +190,7 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify job completed
-    const completedJob = await api.GET("/jobs/{jobId}", {
+    const completedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(completedJob.data?.status).toBe("COMPLETED");
@@ -223,7 +223,7 @@ describe("Multiple Stages Workflow Tests", () => {
     const percentages = [];
 
     // Initial percentage
-    const initial = await api.GET("/jobs/{jobId}", {
+    const initial = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     percentages.push(initial.data!.percentage!);
@@ -234,7 +234,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
       await consumer.markTaskCompleted(dequeuedTask!.id);
 
-      const jobStatus = await api.GET("/jobs/{jobId}", {
+      const jobStatus = await api.GET("/v1/jobs/{jobId}", {
         params: { path: { jobId: job.id } },
       });
       percentages.push(jobStatus.data!.percentage!);
@@ -289,7 +289,7 @@ describe("Multiple Stages Workflow Tests", () => {
 
     await consumer.markTaskFailed(task2!.id);
 
-    const failedStage2 = await api.GET("/stages/{stageId}", {
+    const failedStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
 
@@ -297,14 +297,14 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify job is failed
-    const failedJob = await api.GET("/jobs/{jobId}", {
+    const failedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(failedJob.data?.status).toBe("FAILED");
     //#endregion
 
     //#region Verify third stage remains in CREATED state
-    const unchangedStage3 = await api.GET("/stages/{stageId}", {
+    const unchangedStage3 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage3.id } },
     });
     // Stage 3 should still be CREATED or WAITING since it never became available
@@ -342,14 +342,14 @@ describe("Multiple Stages Workflow Tests", () => {
 
     await consumer.markTaskCompleted(task1!.id);
 
-    const completedStage1 = await api.GET("/stages/{stageId}", {
+    const completedStage1 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage1.id } },
     });
     expect(completedStage1.data?.status).toBe("COMPLETED");
     //#endregion
 
     //#region Verify second stage is WAITING (not PENDING)
-    const waitingStage2 = await api.GET("/stages/{stageId}", {
+    const waitingStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
     expect(waitingStage2.data?.status).toBe("WAITING");
@@ -361,12 +361,12 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Manually transition stage to PENDING
-    await api.PUT("/stages/{stageId}/status", {
+    await api.PUT("/v1/stages/{stageId}/status", {
       params: { path: { stageId: stage2.id } },
       body: { status: "PENDING" },
     });
 
-    const pendingStage2 = await api.GET("/stages/{stageId}", {
+    const pendingStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
     expect(pendingStage2.data?.status).toBe("PENDING");
@@ -386,7 +386,7 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Verify job completed
-    const completedJob = await api.GET("/jobs/{jobId}", {
+    const completedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
     expect(completedJob.data?.status).toBe("COMPLETED");
@@ -408,7 +408,7 @@ describe("Multiple Stages Workflow Tests", () => {
     //#endregion
 
     //#region Get all stages via endpoint
-    const allStages = await api.GET("/jobs/{jobId}/stages", {
+    const allStages = await api.GET("/v1/jobs/{jobId}/stages", {
       params: { path: { jobId: job.id } },
     });
 

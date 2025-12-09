@@ -37,7 +37,7 @@ describe("pause test", () => {
 
     const jobSampleData = createJobData();
     const job = await producer.createJob(jobSampleData);
-    await api.PUT("/jobs/{jobId}/status", {
+    await api.PUT("/v1/jobs/{jobId}/status", {
       body: { status: "PAUSED" },
       params: { path: { jobId: job.id } },
     });
@@ -47,7 +47,7 @@ describe("pause test", () => {
     //#region create stage
     const stageSampleData = createStageData();
     const stage = await producer.createStage(job.id, stageSampleData);
-    await api.PUT("/stages/{stageId}/status", {
+    await api.PUT("/v1/stages/{stageId}/status", {
       body: { status: "PENDING" },
       params: { path: { stageId: stage.id } },
     });
@@ -56,7 +56,7 @@ describe("pause test", () => {
     const task = await producer.createTasks(stage.id, stage.type, [
       taskSampleData,
     ]);
-    await api.PUT("/tasks/{taskId}/status", {
+    await api.PUT("/v1/tasks/{taskId}/status", {
       body: { status: "PENDING" },
       params: { path: { taskId: task[0]!.id } },
     });
@@ -66,7 +66,7 @@ describe("pause test", () => {
     expect(dequeueResult).toBeNull();
 
     //#region unpause job
-    await api.PUT("/jobs/{jobId}/status", {
+    await api.PUT("/v1/jobs/{jobId}/status", {
       body: { status: "PENDING" },
       params: { path: { jobId: job.id } },
     });

@@ -77,12 +77,12 @@ describe("simple test", () => {
     //#endregion
 
     //#region assert initial state
-    const firstStageSummary = await api.GET("/stages/{stageId}/summary", {
+    const firstStageSummary = await api.GET("/v1/stages/{stageId}/summary", {
       params: { path: { stageId: firstStage.id } },
     });
     expect(firstStageSummary.data).toMatchObject(expectedInitialSummary);
 
-    const secondStageSummary = await api.GET("/stages/{stageId}/summary", {
+    const secondStageSummary = await api.GET("/v1/stages/{stageId}/summary", {
       params: { path: { stageId: secondStage.id } },
     });
     expect(secondStageSummary.data).toMatchObject(expectedInitialSummary);
@@ -97,7 +97,7 @@ describe("simple test", () => {
 
     //#region assert progress
     // validate that the first task started also progressed the stage
-    const firstStageRunning = await api.GET("/stages/{stageId}", {
+    const firstStageRunning = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: firstStage.id } },
     });
 
@@ -114,7 +114,7 @@ describe("simple test", () => {
       },
     });
 
-    const currentJob = await api.GET("/jobs/{jobId}", {
+    const currentJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -134,7 +134,7 @@ describe("simple test", () => {
     await expect(completeFirstTaskPromise).resolves.not.toThrow();
 
     // validate first task completed also progress of stage and job
-    const firstStageCompleted = await api.GET("/stages/{stageId}", {
+    const firstStageCompleted = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: firstStage.id } },
     });
 
@@ -153,11 +153,11 @@ describe("simple test", () => {
     });
 
     //#region Validate second stage now available for dequeueing - changed to PENDING
-    const secondStageAfterFirstCompleted = await api.GET("/stages/{stageId}", {
+    const secondStageAfterFirstCompleted = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: secondStage.id } },
     });
 
-    const jobAfterFirstStageCompleted = await api.GET("/jobs/{jobId}", {
+    const jobAfterFirstStageCompleted = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -180,7 +180,7 @@ describe("simple test", () => {
 
     await expect(completeSecondTaskPromise).resolves.not.toThrow();
 
-    const secondStageCompleted = await api.GET("/stages/{stageId}", {
+    const secondStageCompleted = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: secondStage.id } },
     });
 
@@ -198,7 +198,7 @@ describe("simple test", () => {
       },
     });
 
-    const jobCompleted = await api.GET("/jobs/{jobId}", {
+    const jobCompleted = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
