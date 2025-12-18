@@ -41,7 +41,7 @@ describe("Job Abortion Test", () => {
     //#region Start first task to put job in IN_PROGRESS state
     await consumer.dequeueTask(stage.type);
 
-    const jobInProgress = await api.GET("/jobs/{jobId}", {
+    const jobInProgress = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -51,7 +51,7 @@ describe("Job Abortion Test", () => {
     //#endregion
 
     //#region Abort the job
-    const abortResponse = await api.PUT("/jobs/{jobId}/status", {
+    const abortResponse = await api.PUT("/v1/jobs/{jobId}/status", {
       params: { path: { jobId: job.id } },
       body: { status: "ABORTED" },
     });
@@ -62,7 +62,7 @@ describe("Job Abortion Test", () => {
     //#endregion
 
     //#region Verify job is aborted
-    const abortedJob = await api.GET("/jobs/{jobId}", {
+    const abortedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -95,7 +95,7 @@ describe("Job Abortion Test", () => {
     expect(dequeuedTask).toHaveProperty("stageId", stage.id);
 
     await consumer.markTaskCompleted(dequeuedTask!.id);
-    const completedJob = await api.GET("/jobs/{jobId}", {
+    const completedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -103,7 +103,7 @@ describe("Job Abortion Test", () => {
     //#endregion
 
     //#region Try to abort completed job - should succeed (abort is idempotent for terminal states)
-    const abortResponse = await api.PUT("/jobs/{jobId}/status", {
+    const abortResponse = await api.PUT("/v1/jobs/{jobId}/status", {
       params: { path: { jobId: job.id } },
       body: { status: "ABORTED" },
     });

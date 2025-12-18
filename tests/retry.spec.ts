@@ -48,7 +48,7 @@ describe("Task Retry Test", () => {
 
       await consumer.markTaskFailed(dequeuedTask!.id);
 
-      const taskAfterFail = await api.GET("/tasks/{taskId}", {
+      const taskAfterFail = await api.GET("/v1/tasks/{taskId}", {
         params: { path: { taskId: task!.id } },
       });
 
@@ -61,7 +61,7 @@ describe("Task Retry Test", () => {
     //#endregion
 
     //#region Verify stage is marked as failed
-    const failedStage = await api.GET("/stages/{stageId}", {
+    const failedStage = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage.id } },
     });
 
@@ -80,7 +80,7 @@ describe("Task Retry Test", () => {
     //#endregion
 
     //#region Verify job is marked as failed
-    const failedJob = await api.GET("/jobs/{jobId}", {
+    const failedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -112,7 +112,7 @@ describe("Task Retry Test", () => {
 
     await consumer.markTaskFailed(dequeuedTask1!.id);
 
-    const retriedTask = await api.GET("/tasks/{taskId}", {
+    const retriedTask = await api.GET("/v1/tasks/{taskId}", {
       params: { path: { taskId: task!.id } },
     });
 
@@ -128,7 +128,7 @@ describe("Task Retry Test", () => {
 
     await consumer.markTaskCompleted(dequeuedTask2!.id);
 
-    const completedTask = await api.GET("/tasks/{taskId}", {
+    const completedTask = await api.GET("/v1/tasks/{taskId}", {
       params: { path: { taskId: task!.id } },
     });
 
@@ -139,7 +139,7 @@ describe("Task Retry Test", () => {
     //#endregion
 
     //#region Verify stage completed
-    const completedStage = await api.GET("/stages/{stageId}", {
+    const completedStage = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage.id } },
     });
 
@@ -159,7 +159,7 @@ describe("Task Retry Test", () => {
     //#endregion
 
     //#region Verify job completed
-    const completedJob = await api.GET("/jobs/{jobId}", {
+    const completedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 

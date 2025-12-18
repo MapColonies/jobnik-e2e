@@ -45,13 +45,13 @@ describe("Delete Job Tests", () => {
     } else if (testName === "failed") {
       await consumer.markTaskFailed(dequeuedTask!.id);
     } else if (testName === "aborted") {
-      await api.PUT("/jobs/{jobId}/status", {
+      await api.PUT("/v1/jobs/{jobId}/status", {
         params: { path: { jobId: job.id } },
         body: { status: "ABORTED" },
       });
     }
 
-    const jobAfterSetup = await api.GET("/jobs/{jobId}", {
+    const jobAfterSetup = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -59,7 +59,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Delete the job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -70,7 +70,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Verify job is deleted
-    const getDeletedJob = await api.GET("/jobs/{jobId}", {
+    const getDeletedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -90,7 +90,7 @@ describe("Delete Job Tests", () => {
 
     await producer.createTasks(stage.id, stage.type, [createTaskData()]);
 
-    const pendingJob = await api.GET("/jobs/{jobId}", {
+    const pendingJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -98,7 +98,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Try to delete the pending job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -109,7 +109,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Verify job still exists
-    const stillExistingJob = await api.GET("/jobs/{jobId}", {
+    const stillExistingJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -133,7 +133,7 @@ describe("Delete Job Tests", () => {
 
     await consumer.dequeueTask(stage.type);
 
-    const inProgressJob = await api.GET("/jobs/{jobId}", {
+    const inProgressJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -141,7 +141,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Try to delete the in-progress job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -152,7 +152,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Verify job still exists
-    const stillExistingJob = await api.GET("/jobs/{jobId}", {
+    const stillExistingJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -178,12 +178,12 @@ describe("Delete Job Tests", () => {
     await consumer.dequeueTask(stage.type);
 
     // Pause it
-    await api.PUT("/jobs/{jobId}/status", {
+    await api.PUT("/v1/jobs/{jobId}/status", {
       params: { path: { jobId: job.id } },
       body: { status: "PAUSED" },
     });
 
-    const pausedJob = await api.GET("/jobs/{jobId}", {
+    const pausedJob = await api.GET("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -191,7 +191,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Try to delete the paused job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -206,7 +206,7 @@ describe("Delete Job Tests", () => {
     //#region Try to delete non-existent job
     const fakeJobId = "00000000-0000-0000-0000-000000000000" as const;
 
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       // @ts-expect-error - Testing non-existent job
       params: { path: { jobId: fakeJobId } },
     });
@@ -248,7 +248,7 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Delete the job
-    const deleteResponse = await api.DELETE("/jobs/{jobId}", {
+    const deleteResponse = await api.DELETE("/v1/jobs/{jobId}", {
       params: { path: { jobId: job.id } },
     });
 
@@ -256,13 +256,13 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Verify stages are deleted
-    const getStage1 = await api.GET("/stages/{stageId}", {
+    const getStage1 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage1.id } },
     });
 
     expect(getStage1.response.status).toBe(404);
 
-    const getStage2 = await api.GET("/stages/{stageId}", {
+    const getStage2 = await api.GET("/v1/stages/{stageId}", {
       params: { path: { stageId: stage2.id } },
     });
 
@@ -270,13 +270,13 @@ describe("Delete Job Tests", () => {
     //#endregion
 
     //#region Verify tasks are deleted
-    const getTask1 = await api.GET("/tasks/{taskId}", {
+    const getTask1 = await api.GET("/v1/tasks/{taskId}", {
       params: { path: { taskId: task1!.id } },
     });
 
     expect(getTask1.response.status).toBe(404);
 
-    const getTask2 = await api.GET("/tasks/{taskId}", {
+    const getTask2 = await api.GET("/v1/tasks/{taskId}", {
       params: { path: { taskId: task2!.id } },
     });
 
