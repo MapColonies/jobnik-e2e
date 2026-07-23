@@ -6,7 +6,6 @@ import {
   createStageData,
   createTaskData,
 } from "infrastructure/data";
-import type { PaginatedResponse } from "infrastructure/types";
 
 describe("Multiple Stages Workflow Tests", () => {
   let jobnikSDK: JobnikSDK;
@@ -183,9 +182,9 @@ describe("Multiple Stages Workflow Tests", () => {
       params: { path: { jobId: job.id } },
     });
 
-    const allStagesData = allStages.data as unknown as PaginatedResponse<NonNullable<typeof allStages.data>>;
-    expect(allStagesData.items).toHaveLength(5);
-    allStagesData.items.forEach((stage, index) => {
+    const allStagesData = allStages.data;
+    expect(allStagesData?.items).toHaveLength(5);
+    allStagesData!.items.forEach((stage, index) => {
       expect(stage.order).toBe(index + 1);
       expect(stage.status).toBe("COMPLETED");
     });
@@ -414,14 +413,13 @@ describe("Multiple Stages Workflow Tests", () => {
       params: { path: { jobId: job.id } },
     });
 
-    const allStagesData = allStages.data as unknown as PaginatedResponse<NonNullable<typeof allStages.data>>;
     expect(allStages.response.status).toBe(200);
-    expect(allStagesData.total).toBe(4);
-    expect(allStagesData.items).toHaveLength(4);
+    expect(allStages.data?.total).toBe(4);
+    expect(allStages.data?.items).toHaveLength(4);
     //#endregion
 
     //#region Verify stages are returned in creation order
-    allStagesData.items.forEach((stage, index) => {
+    allStages.data!.items.forEach((stage, index) => {
       expect(stage.order).toBe(index + 1);
       expect(stage.id).toBe(stages[index]!.id);
       expect(stage.jobId).toBe(job.id);
