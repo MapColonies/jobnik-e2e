@@ -182,8 +182,9 @@ describe("Multiple Stages Workflow Tests", () => {
       params: { path: { jobId: job.id } },
     });
 
-    expect(allStages.data).toHaveLength(5);
-    allStages.data!.forEach((stage, index) => {
+    const allStagesData = allStages.data;
+    expect(allStagesData).toHaveLength(5);
+    allStagesData!.forEach((stage, index) => {
       expect(stage.order).toBe(index + 1);
       expect(stage.status).toBe("COMPLETED");
     });
@@ -416,7 +417,7 @@ describe("Multiple Stages Workflow Tests", () => {
     expect(allStages.data).toHaveLength(4);
     //#endregion
 
-    //#region Verify stages are in order
+    //#region Verify stages are returned in creation order
     allStages.data!.forEach((stage, index) => {
       expect(stage.order).toBe(index + 1);
       expect(stage.id).toBe(stages[index]!.id);
@@ -424,4 +425,6 @@ describe("Multiple Stages Workflow Tests", () => {
     });
     //#endregion
   });
+
 });
+
