@@ -36,12 +36,11 @@ describe("Pagination Tests", () => {
     });
 
     expect(allStages.response.status).toBe(200);
-    expect(allStages.data?.total).toBe(4);
-    expect(allStages.data?.items).toHaveLength(4);
+    expect(allStages.data).toHaveLength(4);
     //#endregion
 
     //#region Verify stages are returned in creation order
-    allStages.data!.items.forEach((stage, index) => {
+    allStages.data!.forEach((stage, index) => {
       expect(stage.order).toBe(index + 1);
       expect(stage.id).toBe(stages[index]!.id);
       expect(stage.jobId).toBe(job.id);
@@ -62,8 +61,8 @@ describe("Pagination Tests", () => {
     //#endregion
 
     //#region Request first page with page_size=2
-    const page1 = await api.GET("/v1/jobs/{jobId}/stages", {
-      params: { path: { jobId: job.id }, query: { page_size: 2, page: 1 } },
+    const page1 = await api.GET("/v1/stages", {
+      params: { query: { job_id: job.id, page_size: 2, page: 1 } },
     });
 
     expect(page1.response.status).toBe(200);
@@ -72,8 +71,8 @@ describe("Pagination Tests", () => {
     //#endregion
 
     //#region Request second page — should have 2 items
-    const page2 = await api.GET("/v1/jobs/{jobId}/stages", {
-      params: { path: { jobId: job.id }, query: { page_size: 2, page: 2 } },
+    const page2 = await api.GET("/v1/stages", {
+      params: { query: { job_id: job.id, page_size: 2, page: 2 } },
     });
 
     expect(page2.data?.total).toBe(5);
@@ -81,8 +80,8 @@ describe("Pagination Tests", () => {
     //#endregion
 
     //#region Request third page — should have 1 remaining item
-    const page3 = await api.GET("/v1/jobs/{jobId}/stages", {
-      params: { path: { jobId: job.id }, query: { page_size: 2, page: 3 } },
+    const page3 = await api.GET("/v1/stages", {
+      params: { query: { job_id: job.id, page_size: 2, page: 3 } },
     });
 
     expect(page3.data?.total).toBe(5);
